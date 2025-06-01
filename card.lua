@@ -1,39 +1,39 @@
 
-Vector = require "vector"
-Config = require "conf"  
+local Vector = require "vector"
+local Config = require "conf"
+local Abilities = require "abilities"
 
 local Card = {}
 Card.__index = Card
 
 -- Load all Images --
-faceDown  = love.graphics.newImage(FILE_LOCATIONS.FACEDOWN)
+faceDown  = love.graphics.newImage(FILE_LOCATIONS.BACK)
 emptyCard = love.graphics.newImage(FILE_LOCATIONS.EMPTY)
-solitaire = love.graphics.newImage(FILE_LOCATIONS.SOLITAIRE)
-reset_img = love.graphics.newImage(FILE_LOCATIONS.RESET)
-undo_img  = love.graphics.newImage(FILE_LOCATIONS.UNDO)
-mute_img  = love.graphics.newImage(FILE_LOCATIONS.MUTE)
-win_img   = love.graphics.newImage(FILE_LOCATIONS.VICTORY)
+endButton = love.graphics.newImage(FILE_LOCATIONS.END)
 
+name_font = love.graphics.newFont(FILE_LOCATIONS.FONT1, 14)
+title_font = love.graphics.newFont(FILE_LOCATIONS.FONT1, 28)
+detail_font = love.graphics.newFont(FILE_LOCATIONS.FONT2, 8)
 
 -- Load all Audio --
-win_SFX     = love.audio.newSource(FILE_LOCATIONS.WIN, "static")
-shuffle_SFX = love.audio.newSource(FILE_LOCATIONS.SHUFFLE, "static")
-move_SFX    = love.audio.newSource(FILE_LOCATIONS.MOVE, "static")
-draw_SFX    = love.audio.newSource(FILE_LOCATIONS.DRAW, "static")
+   -- (empty) --
 
 -- Edit Audio --
-move_SFX:setVolume(0.5)
-move_SFX:setPitch(2)
-
+   -- (empty) --
 
 -- CREATE NEW CARD --
-function Card:new(cost, power, sprite, faceUp, x, y)
+function Card:new(data, faceUp, x, y)
   local metatable = {__index = Card}
+  local name, cost, power, ability = unpack(data)
   local card = {
+    name = name,
     cost = cost,
     power = power,
-    sprite = sprite,
+    sprite = love.graphics.newImage("Sprites/" .. string.lower(name) .. ".png"),
+    ability = ability,
     faceUp = faceUp,
+    field = nil,
+    owner = nil,
     position = Vector(x, y),
     isDragging = false,
     offsetX = 0,
@@ -47,7 +47,7 @@ end
 
 -- FORMAT CARD INTO PRINTABLE STATE --
 function Card:toString()
-  return ranks[self.rank] .. " of " .. self.suit.s
+  return self.name .. ": " .. "(" .. self.cost .. ", " .. self.power .. ")"
 end
 
 -- FLIP CARD --
@@ -56,15 +56,34 @@ function Card:flip()
 end
 
 -- DRAW CARD --
-function Card:draw()
-  
+function Card:draw(dynamic_scale)
+  dynamic_scale = dynamic_scale or scale
+  local cardWidth  = img_width * dynamic_scale
+  local cardHeight = img_height * dynamic_scale
+
   if self.draggable and self.faceUp and draggableCard == nil and self:isMouseOver(love.mouse.getX(), love.mouse.getY()) then
     love.graphics.setColor(COLORS.LIGHT_GOLD)
+  else
+    love.graphics.setColor(COLORS.WHITE)
   end
   if self.faceUp == true then
-    love.graphics.draw(self.sprite, self.position.x, self.position.y, 0, scale, scale)
+    love.graphics.draw(emptyCard, self.position.x, self.position.y, 0, dynamic_scale, dynamic_scale)
+    love.graphics.draw(self.sprite, self.position.x+cardWidth/2, self.position.y+cardHeight*0.15, 0, dynamic_scale*0.05, dynamic_scale*0.05, self.sprite:getWidth()/2)
+    
+    love.graphics.setColor(COLORS.RED)
+    love.graphics.setFont(name_font)
+    love.graphics.printf(self.name, self.position.x, self.position.y, cardWidth, "center")
+    
+    love.graphics.setColor(COLORS.BLUE)
+    love.graphics.printf(self.cost, self.position.x+cardWidth*0.1, self.position.y+cardHeight*0.47, cardWidth, "left")
+    love.graphics.setColor(COLORS.DARK_RED)
+    love.graphics.printf(self.power, self.position.x, self.position.y+cardHeight*0.47, cardWidth*0.92, "right")
+    
+    love.graphics.setColor(COLORS.BLACK)
+    love.graphics.setFont(detail_font)
+    love.graphics.printf(self.ability, self.position.x+cardWidth*0.075, self.position.y+cardHeight*0.62, cardWidth*0.9, "center")
   else
-    love.graphics.draw(faceDown, self.position.x, self.position.y, 0, scale, scale)
+    love.graphics.draw(faceDown, self.position.x, self.position.y, 0, dynamic_scale, dynamic_scale)
   end
   love.graphics.setColor(COLORS.WHITE)
 end
@@ -74,6 +93,7 @@ function Card:startDrag(mouseX, mouseY)
     self.isDragging = true
     self.offsetX = mouseX - self.position.x
     self.offsetY = mouseY - self.position.y
+    self.anchor = Vector(self.position.x, self.position.y)
 end
 
 -- TRANSFER PILE TO ANOTHER --
@@ -127,68 +147,24 @@ end
   
 -- STOP DRAGGING CARD --
 function Card:stopDrag(mouseX, mouseY)
-    -- For all accepted input locations --
-    for i, region in ipairs(regions) do
-      
-      -- If mouse is in one of these locations?
-      if mouseX > region.start and mouseX < region.finish and mouseY > region.y then
+    
+    for i, field in ipairs(game.board.fields) do
+      if field:isOver(mouseX, mouseY) then
+        local index = indexOf(game.player.hand, self)
+        if index == nil then break end
         
-        -- Leave loop if released on same pile as before --
-        if board.piles[i] == self.pile then break end
+        local card = game.player:playCard(index)
         
-        -- If dropped on a tableau tile then...
-        if PILE_TYPES[i] == TorF.TABLEAU then
-          
-          -- If tableau pile has no cards then...
-          if board.piles[i]:isEmpty() then
-            -- Check if card is a king --
-            if ranks[self.rank] ~= "K" then
-              break
-            end
-            -- Transfer card as well as all cards on it to new pile --
-            table.insert(board.action_stack, {self, self.pile, self:transfer(board.piles[i])})
-            
-            
-            return
-          end          
-          
-          -- If tableau pile's top card is of the same suit as card, then leave loop --
-          if board.piles[i].cards[#board.piles[i].cards].suit.c == self.suit.c then
-            break
-          end
-          
-          -- If card's rank is not one less than top card in pile, then leave loop --
-          if board.piles[i].cards[#board.piles[i].cards].rank ~= self.rank+1 then
-            break
-          end
-          
-          -- Transfer card as well as all cards on it to new pile --
-          table.insert(board.action_stack, {self, self.pile, self:transfer(board.piles[i])})
-          
-          return
-        else -- If pile is a foundation pile, then...
-          
-          -- If card's suit is not same as pile's top card, then leave loop --
-          if board.piles[i].cards[#board.piles[i].cards].suit.s ~= self.suit.s then
-            break
-          end
-          
-          -- If card's rank is not one more than pile's top card, then leave loop --
-          if board.piles[i].cards[#board.piles[i].cards].rank ~= self.rank-1 then
-            break
-          end
-          
-          -- If card is not the top card of its current pile, then leave loop --
-          if self.pile.cards[#self.pile.cards] ~= self then
-            break
-          end
-          
-          -- Remove card from current pile and transfer it to new pile --
-          table.insert(board.action_stack, {self, self.pile, self:transfer(board.piles[i])})
-          
-          return
+        if card == nil then break end
         
+        field:addCard(game.player, self)
+        for _, c in ipairs(field.player_slots) do
+          if ABILITIES[c.name] and ABILITIES[c.name].onPlay then
+            ABILITIES[c.name].onPlay(c)
+          end
         end
+        table.insert(game.action, self)
+        return
       end
     end
     
@@ -208,8 +184,8 @@ end
 
 -- CHECKS WHEN MOUSE IS OVER CARD --
 function Card:isMouseOver(mouseX, mouseY)
-    local width = self.sprite:getWidth() * scale
-    local height = self == self.pile.cards[#self.pile.cards] and self.sprite:getHeight() * scale or height*0.03
+    local width = img_width * scale
+    local height = img_height * scale
     --local height = self.sprite:getHeight() * scale
     return mouseX > self.position.x and mouseX < self.position.x + width and
            mouseY > self.position.y and mouseY < self.position.y + height
