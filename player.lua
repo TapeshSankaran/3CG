@@ -12,7 +12,7 @@ function Player:new(name, deck, x, y)
       if name == "Opponent" then
         card:flip()
       end
-      card.owner = self
+      card.owner = name
       table.insert(hand, card)
     end
     

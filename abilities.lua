@@ -52,7 +52,6 @@ ABILITIES = {
       for _, c in ipairs(toRemove) do
         card.field:removeCard(card.owner, c)
       end
-      card.field:refreshCard(card.owner, card)
     end
   },
 
@@ -61,13 +60,13 @@ ABILITIES = {
       local enemy_slots = card.owner == game.player and card.field.opponent_slots or card.field.player_slots
       local weakest, index = nil, nil
       for i, c in ipairs(enemy_slots) do
-        if not weakest or c.power < weakest.power then
+        if not weakest or tonumber(c.power) < tonumber(weakest.power) then
           weakest = c
           index = i
         end
       end
       if weakest then
-        -- ToDo: Create Move function in board
+        game.board:moveCard(weakest.owner, weakest)
       end
     end
   },
@@ -124,7 +123,7 @@ ABILITIES = {
 
   ["Hermes"] = {
     onReveal = function(card)
-      -- Same as Poseidon --
+      game.board:moveCard(card.owner, card)
     end
   },
 
@@ -140,7 +139,10 @@ ABILITIES = {
   ["Ship of Theseus"] = {
     onReveal = function(card)
       card.power = card.power + 1
-      card.owner:addCard(card)
+      local ship_of_theseus = cardData[18]
+      ship_of_theseus = game:createCard(ship_of_theseus, true)
+      ship_of_theseus.owner = card.owner
+      card.owner:addCard(ship_of_theseus)
     end
   },
 
@@ -223,6 +225,7 @@ ABILITIES = {
       local enemy = card.owner == game.player and game.opponent or game.player
       local stolen = enemy.deck:deal()
       if stolen then card.owner:addCard(stolen) end
+      stolen.owner = card.owner
     end
   },
 
@@ -270,7 +273,6 @@ ABILITIES = {
       for _, c in ipairs(toRemove) do
         card.field:removeCard(card.owner, c)
       end
-      card.field:refreshCard(card.owner, card)
     end
   },
 
@@ -294,6 +296,7 @@ ABILITIES = {
 
   ["Helios"] = {
     onEoT = function(card)
+      print(tostring(card.owner))
       card.field:removeCard(card.owner, card)
     end
   },

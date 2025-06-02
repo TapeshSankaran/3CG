@@ -33,7 +33,7 @@ function Card:new(data, faceUp, x, y)
     ability = ability,
     faceUp = faceUp,
     field = nil,
-    owner = nil,
+    owner = owner,
     position = Vector(x, y),
     isDragging = false,
     offsetX = 0,
@@ -60,8 +60,10 @@ function Card:draw(dynamic_scale)
   dynamic_scale = dynamic_scale or scale
   local cardWidth  = img_width * dynamic_scale
   local cardHeight = img_height * dynamic_scale
+  local mouseOver = self:isMouseOver(love.mouse.getX(), love.mouse.getY())
+  local isPlayerCard = self.owner == game.player or self.owner == "Player"
 
-  if self.draggable and self.faceUp and draggableCard == nil and self:isMouseOver(love.mouse.getX(), love.mouse.getY()) then
+  if self.faceUp and draggableCard == nil and mouseOver and state == "player_turn" and isPlayerCard then
     love.graphics.setColor(COLORS.LIGHT_GOLD)
   else
     love.graphics.setColor(COLORS.WHITE)
@@ -90,10 +92,14 @@ end
 
 -- START DRAGGING CARD --
 function Card:startDrag(mouseX, mouseY)
-    self.isDragging = true
-    self.offsetX = mouseX - self.position.x
-    self.offsetY = mouseY - self.position.y
-    self.anchor = Vector(self.position.x, self.position.y)
+  if state ~= "player_turn" then
+    return
+  end
+  
+  self.isDragging = true
+  self.offsetX = mouseX - self.position.x
+  self.offsetY = mouseY - self.position.y
+  self.anchor = Vector(self.position.x, self.position.y)
 end
 
 -- TRANSFER PILE TO ANOTHER --
@@ -175,11 +181,11 @@ end
 
 -- UPDATE CARD POSITION WHEN DRAGGING --
 function Card:update(dt, mouseX, mouseY)
-    if self.isDragging and self.faceUp then
-        
-        self.position.x = mouseX - self.offsetX
-        self.position.y = mouseY - self.offsetY
-    end
+  if self.isDragging and self.faceUp then
+      
+      self.position.x = mouseX - self.offsetX
+      self.position.y = mouseY - self.offsetY
+  end
 end
 
 -- CHECKS WHEN MOUSE IS OVER CARD --

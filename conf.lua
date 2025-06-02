@@ -13,8 +13,10 @@ img_height = 64
 scale = 2.2
 
    -- Set Random Seed --
-seed = os.time() -- 5 for testing, os.time() for main use
+seed = os.time() -- [default: 5 for testing, os.time() for main use]
 
+   -- Target Points --
+target_points = 100 -- [default: 25] 
 
    -- End Button Options --
 end_x = width*0.9
@@ -50,7 +52,7 @@ COLORS = {
 }
 
    -- 33 zeros --
-LIST = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+LIST = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 
 -- GLOBAL VARS --

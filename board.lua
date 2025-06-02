@@ -41,6 +41,15 @@ function Board:evaluateTurn()
   return results
 end
 
+function Board:moveCard(player, card)
+  local og_field = card.field
+  local fieldOptions = {1, 2, 3}
+  table.remove(fieldOptions, indexOf(self.fields, og_field))
+  local end_field = self.fields[fieldOptions[math.random(1, 2)]]
+
+  end_field:addCard(player, og_field:removeCard(player, card))
+end
+
 function Board:allFaceDown()
   for _, field in ipairs(self.fields) do
     for _, card in ipairs(field.player_slots) do

@@ -44,7 +44,6 @@ function AI:takeTurn()
         location:addCard(self.player, outCard)
 
         for _, c in ipairs(location.opponent_slots) do
-          print(c:toString())
           if ABILITIES[c.name] and ABILITIES[c.name].onPlay and c ~= card then
             ABILITIES[c.name].onPlay(c)
           end

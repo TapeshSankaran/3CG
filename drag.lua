@@ -40,6 +40,14 @@ function love.update(dt)
   elseif state == "next_phase" then
     game:nextTurn()
     state = "player_turn"
+  elseif state == "won" then
+    timer = 1
+    state = "winning"
+  elseif state == "winning" then
+    timer = timer - dt
+    if timer <= 0 then
+      hasWon = true
+    end
   end
   
   if substate == "stall" then
@@ -78,7 +86,7 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
   
   -- If left click and no card already being dragged --
-  if button == 1 and draggableCard == nil then
+  if button == 1 and draggableCard == nil and state == "player_turn" then
     start_drag(x, y)
   end
   
@@ -141,11 +149,10 @@ function restartGame()
   
   -- Create Deck --
   local me_deck2 = Deck:new(cardData, width*0.025, height*0.78)
-  --me_deck:shuffle()
+  me_deck:shuffle()
   local opp_deck2 = Deck:new(cardData, width*0.875, height*0.01)
-  --opp_deck:shuffle()
-  print(#me_deck2.cards)
-  print(#opp_deck2.cards)
+  opp_deck:shuffle()
+  
   game = Game:new(me_deck2, opp_deck2)
   
   ai = AI:new(game.opponent, game.board)

@@ -34,6 +34,9 @@ function Field:removeCard(player, card)
     table.remove(slots, index)
     table.insert(player.discard_pile, card)
     card.position = Vector(-100, -100)
+    
+    self:refreshCards(player)
+    
     return card
   end
   return nil
@@ -58,9 +61,12 @@ function Field:isWinning(player)
   return ownerPower > otherPower
 end
 
-function Field:refreshCard(player, card)
-  self:addCard(player, self:removeCard(player, card))
-  table.remove(player.discard_pile)
+function Field:refreshCards(player)
+  local slots = player.name == "Player" and self.player_slots or self.opponent_slots
+  local height = player.name == "Player" and self.position.y+0.6*self.end_position.y or self.position.y+self.end_position.y*0.1
+  for i, card in ipairs(slots) do
+    card.position = Vector(self.position.x + self.end_position.x*(i-1)/4, height)
+  end
 end
 
 function Field:calculatePower()

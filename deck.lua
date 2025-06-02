@@ -10,18 +10,17 @@ function Deck:new(cardData, x, y)
   
   local cards = {}
   local cardRef = {}
-  local cardCheck = LIST
+  local cardCheck = {}
 
-  for i=1,20 do
-    cardIndex = math.random(1, 33)
-    cardCheck[cardIndex] = cardCheck[cardIndex] + 1
+  while #cards < 20 do
+    cardIndex = math.random(1, 34)
+    cardCheck[cardIndex] = cardCheck[cardIndex] and cardCheck[cardIndex] + 1 or 1
     
     if cardCheck[cardIndex] <= 2 then
       local card = Card:new(cardData[cardIndex], false, x, y)
+
       table.insert(cards, card)
       table.insert(cardRef, card)
-    else
-      i = i - 1
     end
   end
   

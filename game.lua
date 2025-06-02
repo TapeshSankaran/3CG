@@ -10,7 +10,7 @@ Game.__index = Game
 function Game:new(playerDeck, opponentDeck)
   return setmetatable({
     turn = 1,
-    targetPoints = 25,
+    targetPoints = target_points,
     player = Player:new("Player", playerDeck, width/2, height*0.79),
     opponent = Player:new("Opponent", opponentDeck, width/2, -height*0.005),
     board = Board:new(width*0.03, height*0.25, width*0.97, height*0.73),
@@ -27,13 +27,13 @@ function Game:nextTurn()
   if self.player.points >= self.targetPoints or self.opponent.points >= self.targetPoints then
     if self.player.points > self.opponent.points then
       self.winner = "Player wins!"
-      hasWon = true
+      state = "won"
     elseif self.opponent.points > self.player.points then
       self.winner = "Opponent wins!"
-      hasWon = true
+      state = "won"
     else
       self.winner = "It's a draw!"
-      hasWon = true
+      state = "won"
     end
     return true
   end
