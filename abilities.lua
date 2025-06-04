@@ -22,20 +22,16 @@ ABILITIES = {
   ["Ares"] = {
     onReveal = function(card)
       if card.field ~= nil then
-        local slots = card.owner == game.player and card.field.player_slots or card.field.opponent_slots
+        local slots = card.owner == game.player and card.field.opponent_slots or card.field.player_slots
         card.power = card.power + #slots * 2
       end
     end
   },
 
   ["Medusa"] = {
-    onPlay = function(card)
-      for _, c in ipairs(card.field.opponent_slots) do
-        if c ~= card then c.power = c.power - 1 end
-      end
-      for _, c in ipairs(card.field.player_slots) do
-        if c ~= card then c.power = c.power - 1 end
-      end
+    onPlay = function(card, c)
+      print("hello")
+      c.power = (tonumber(c.power) > 0 and c ~= card) and c.power - 1 or c.power
     end
   },
 
@@ -59,6 +55,7 @@ ABILITIES = {
     onReveal = function(card)
       local enemy_slots = card.owner == game.player and card.field.opponent_slots or card.field.player_slots
       local weakest, index = nil, nil
+      local enemy = card.owner == game.player and game.opponent or game.player
       for i, c in ipairs(enemy_slots) do
         if not weakest or tonumber(c.power) < tonumber(weakest.power) then
           weakest = c
@@ -138,10 +135,10 @@ ABILITIES = {
 
   ["Ship of Theseus"] = {
     onReveal = function(card)
-      card.power = card.power + 1
       local ship_of_theseus = cardData[18]
       ship_of_theseus = game:createCard(ship_of_theseus, true)
       ship_of_theseus.owner = card.owner
+      ship_of_theseus.power = ship_of_theseus.power + 1
       card.owner:addCard(ship_of_theseus)
     end
   },
@@ -175,12 +172,9 @@ ABILITIES = {
   },
 
   ["Athena"] = {
-    onPlay = function(card)
-      local slots = card.team == "Player" and card.field.player_slots or card.field.opponent_slots
-      for _, c in ipairs(slots) do
-        if c ~= card then
-          card.power = card.power + 1
-        end
+    onPlay = function(card, c)
+      if c ~= card and card.owner == c.owner then
+        card.power = card.power + 1
       end
     end
   },
@@ -205,7 +199,7 @@ ABILITIES = {
       local weakest = card.owner.hand[1]
       local index = 1
       for i, c in ipairs(card.owner.hand) do
-        if not weakest or c.power < weakest.power then
+        if not weakest or tonumber(c.power) < tonumber(weakest.power) then
           weakest = c
           index = i
         end

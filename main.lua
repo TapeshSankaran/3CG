@@ -23,14 +23,9 @@ function love.load()
   
   -- Read CSV --
   cardData = read_csv(FILE_LOCATIONS.CSV)
-  
-  -- Create Deck --
-  local me_deck  = Deck:new(cardData, width*0.025, height*0.78)
-  me_deck:shuffle()
-  local opp_deck = Deck:new(cardData, width*0.875, height*0.01)
-  opp_deck:shuffle()
 
-  game = Game:new(me_deck, opp_deck)
+  -- Create Game --
+  game = Game:new()
   
   ai = AI:new(game.opponent, game.board)
 end

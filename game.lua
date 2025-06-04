@@ -7,14 +7,15 @@ local Board   = require "board"
 Game = {}
 Game.__index = Game
 
-function Game:new(playerDeck, opponentDeck)
+function Game:new()
   return setmetatable({
     turn = 1,
     targetPoints = target_points,
-    player = Player:new("Player", playerDeck, width/2, height*0.79),
-    opponent = Player:new("Opponent", opponentDeck, width/2, -height*0.005),
+    player = Player:new("Player", width/2, height*0.79),
+    opponent = Player:new("Opponent", width/2, -height*0.005),
     board = Board:new(width*0.03, height*0.25, width*0.97, height*0.73),
     extra = 0,
+    state = "player_turn",
     action = {}
   }, self)
 end
@@ -27,13 +28,13 @@ function Game:nextTurn()
   if self.player.points >= self.targetPoints or self.opponent.points >= self.targetPoints then
     if self.player.points > self.opponent.points then
       self.winner = "Player wins!"
-      state = "won"
+      self.state = "won"
     elseif self.opponent.points > self.player.points then
       self.winner = "Opponent wins!"
-      state = "won"
+      self.state = "won"
     else
       self.winner = "It's a draw!"
-      state = "won"
+      self.state = "won"
     end
     return true
   end
@@ -45,16 +46,22 @@ function Game:nextTurn()
   self.opponent:drawCard()
   
   for _, field in ipairs(self.board.fields) do
-    for _, c in ipairs(field.opponent_slots) do
-      if ABILITIES[c.name] and ABILITIES[c.name].onEoT then
-        ABILITIES[c.name].onEoT(c)
+    local cards, onEoTs = field:hasTriggers("onEoT", "both")
+    if onEoTs then
+      for i, onEoT in ipairs(onEoTs) do
+        onEoT(cards[i])
       end
     end
-    for _, c in ipairs(field.player_slots) do
-      if ABILITIES[c.name] and ABILITIES[c.name].onEoT then
-        ABILITIES[c.name].onEoT(c)
-      end
-    end
+    --for _, c in ipairs(field.opponent_slots) do
+    --  if ABILITIES[c.name] and ABILITIES[c.name].onEoT then
+    --    ABILITIES[c.name].onEoT(c)
+    --  end
+    --end
+    --for _, c in ipairs(field.player_slots) do
+    --  if ABILITIES[c.name] and ABILITIES[c.name].onEoT then
+    --    ABILITIES[c.name].onEoT(c)
+    --  end
+    --end
   end
 end
 
@@ -77,9 +84,7 @@ function Game:activateReveal()
   local card = table.remove(self.action, 1)
   
   if card ~= nil then
-    if ABILITIES[card.name] and ABILITIES[card.name].onReveal then
-      ABILITIES[card.name].onReveal(card)
-    end
+    card:trigger("onReveal")
   end
 end
 
@@ -102,7 +107,7 @@ function Game:draw()
   self.board:draw()
   self.player:draw()
   self.opponent:draw()
-  if state == "player_turn" then
+  if game.state == "player_turn" then
     love.graphics.draw(endButton, end_x, end_y, 0, end_scale, end_scale)
   end
   love.graphics.setColor(COLORS.BLACK)

@@ -5,7 +5,7 @@ local Vector = require "vector"
 local Deck = {}
 Deck.__index = Deck
 
-function Deck:new(cardData, x, y)
+function Deck:new(cardData, owner, x, y)
   
   
   local cards = {}
@@ -17,7 +17,7 @@ function Deck:new(cardData, x, y)
     cardCheck[cardIndex] = cardCheck[cardIndex] and cardCheck[cardIndex] + 1 or 1
     
     if cardCheck[cardIndex] <= 2 then
-      local card = Card:new(cardData[cardIndex], false, x, y)
+      local card = Card:new(cardData[cardIndex], false, owner, x, y)
 
       table.insert(cards, card)
       table.insert(cardRef, card)

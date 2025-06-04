@@ -59,7 +59,6 @@ LIST = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 game = {}
 ai = {}
 cardData = {}
-state = "player_turn"
 hasWon = false
 cont_over = false
 

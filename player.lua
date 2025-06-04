@@ -5,7 +5,11 @@ Deck   = require "deck"
 Player = {}
 Player.__index = Player
 
-function Player:new(name, deck, x, y)
+function Player:new(name, x, y)
+    
+    local deck  = Deck:new(cardData, name, width*0.025, height*0.78)
+    deck:shuffle()
+  
     local hand = {}
     for _ = 1, 4 do
       local card = deck:deal()

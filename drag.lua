@@ -21,29 +21,31 @@ function love.update(dt)
   if draggableCard then
     draggableCard:update(dt, mouseX, mouseY)
   end
-  if state == "ai_turn" then
+  if game.state == "ai_turn" then
     game:submitTurn()
-    state = "wait_for_flip"
+    game.state = "wait_for_flip"
     timer = 2
-  elseif state == "wait_for_flip" then
+  elseif game.state == "wait_for_flip" then
     timer = timer - dt
     if timer <= 0 then
       substate = "stalled"
-      state = "waiting"
+      game.state = "waiting"
       timer = 1
     end
-  elseif state == "flipped" then
+  elseif game.state == "flipped" then
     timer = timer - dt
     if timer <= 0 then
-      state = "next_phase"
+      game.state = "next_phase"
     end
-  elseif state == "next_phase" then
+  elseif game.state == "next_phase" then
     game:nextTurn()
-    state = "player_turn"
-  elseif state == "won" then
-    timer = 1
-    state = "winning"
-  elseif state == "winning" then
+    if game.state ~= "won" then
+      game.state = "player_turn"
+    end
+  elseif game.state == "won" then
+    timer = 2
+    game.state = "winning"
+  elseif game.state == "winning" then
     timer = timer - dt
     if timer <= 0 then
       hasWon = true
@@ -63,7 +65,7 @@ function love.update(dt)
       substate = "repeat"
     else
       substate = "standby"
-      state = "next_phase"
+      game.state = "next_phase"
       timer = 1
     end
   elseif substate == "repeat" then
@@ -86,13 +88,13 @@ end
 function love.mousepressed(x, y, button, istouch, presses)
   
   -- If left click and no card already being dragged --
-  if button == 1 and draggableCard == nil and state == "player_turn" then
+  if button == 1 and draggableCard == nil and game.state == "player_turn" then
     start_drag(x, y)
   end
   
   -- End Turn Button click functionality --
-  if button == 1 and end_button_isOver(x, y) and not mousePressed and state == "player_turn" then
-    state = "ai_turn"
+  if button == 1 and end_button_isOver(x, y) and not mousePressed and game.state == "player_turn" then
+    game.state = "ai_turn"
   end
   
     -- New Game Button click functionality --
@@ -147,16 +149,9 @@ end
 function restartGame()
   math.randomseed(os.time())
   
-  -- Create Deck --
-  local me_deck2 = Deck:new(cardData, width*0.025, height*0.78)
-  me_deck:shuffle()
-  local opp_deck2 = Deck:new(cardData, width*0.875, height*0.01)
-  opp_deck:shuffle()
-  
-  game = Game:new(me_deck2, opp_deck2)
+  game = Game:new()
   
   ai = AI:new(game.opponent, game.board)
-  state = "player_turn"
   hasWon = false
   cont_over = false
 

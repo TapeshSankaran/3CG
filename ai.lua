@@ -43,10 +43,9 @@ function AI:takeTurn()
         
         location:addCard(self.player, outCard)
 
-        for _, c in ipairs(location.opponent_slots) do
-          if ABILITIES[c.name] and ABILITIES[c.name].onPlay and c ~= card then
-            ABILITIES[c.name].onPlay(c)
-          end
+        local c, onPlay = location:hasTrigger("onPlay", "both")
+        if onPlay then
+          onPlay(c, card)
         end
 
         availableMana = availableMana - card.cost

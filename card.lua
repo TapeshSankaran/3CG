@@ -22,7 +22,7 @@ detail_font = love.graphics.newFont(FILE_LOCATIONS.FONT2, 8)
    -- (empty) --
 
 -- CREATE NEW CARD --
-function Card:new(data, faceUp, x, y)
+function Card:new(data, faceUp, owner, x, y)
   local metatable = {__index = Card}
   local name, cost, power, ability = unpack(data)
   local card = {
@@ -33,7 +33,7 @@ function Card:new(data, faceUp, x, y)
     ability = ability,
     faceUp = faceUp,
     field = nil,
-    owner = owner,
+    owner = (owner == "Player" or owner == game.player) and game.player or game.opponent,
     position = Vector(x, y),
     isDragging = false,
     offsetX = 0,
@@ -55,6 +55,11 @@ function Card:flip()
   self.faceUp = not self.faceUp
 end
 
+function Card:trigger(trigger)
+  if ABILITIES[self.name] and ABILITIES[self.name][trigger] then
+    ABILITIES[self.name][trigger](self)
+  end
+end
 -- DRAW CARD --
 function Card:draw(dynamic_scale)
   dynamic_scale = dynamic_scale or scale
@@ -63,7 +68,7 @@ function Card:draw(dynamic_scale)
   local mouseOver = self:isMouseOver(love.mouse.getX(), love.mouse.getY())
   local isPlayerCard = self.owner == game.player or self.owner == "Player"
 
-  if self.faceUp and draggableCard == nil and mouseOver and state == "player_turn" and isPlayerCard then
+  if self.faceUp and draggableCard == nil and mouseOver and game.state == "player_turn" and isPlayerCard then
     love.graphics.setColor(COLORS.LIGHT_GOLD)
   else
     love.graphics.setColor(COLORS.WHITE)
@@ -92,7 +97,7 @@ end
 
 -- START DRAGGING CARD --
 function Card:startDrag(mouseX, mouseY)
-  if state ~= "player_turn" then
+  if game.state ~= "player_turn" then
     return
   end
   
@@ -164,10 +169,9 @@ function Card:stopDrag(mouseX, mouseY)
         if card == nil then break end
         
         field:addCard(game.player, self)
-        for _, c in ipairs(field.player_slots) do
-          if ABILITIES[c.name] and ABILITIES[c.name].onPlay then
-            ABILITIES[c.name].onPlay(c)
-          end
+        local c, onPlay = field:hasTrigger("onPlay", "both")
+        if onPlay then
+          onPlay(c, self)
         end
         table.insert(game.action, self)
         return

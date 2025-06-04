@@ -69,6 +69,49 @@ function Field:refreshCards(player)
   end
 end
 
+function Field:hasTrigger(trigger, target)
+  if target == "Player" or target == "both" then
+    for _, card in ipairs(self.player_slots) do
+      local ability = ABILITIES[card.name]
+      if ability and ability[trigger] then
+        return card, ability[trigger]
+      end
+    end
+  end
+  if target == "Opponent" or target == "both" then
+    for _, card in ipairs(self.opponent_slots) do
+      local ability = ABILITIES[card.name]
+      if ability and ability[trigger] then
+        return card, ability[trigger]
+      end
+    end
+  end
+  return nil, nil
+end
+
+function Field:hasTriggers(trigger, target)
+  local cards, abilities = {}, {}
+  if target == "Player" or target == "both" then
+    for _, card in ipairs(self.player_slots) do
+      local ability = ABILITIES[card.name]
+      if ability and ability[trigger] then
+        table.insert(cards, card)
+        table.insert(abilities, ability[trigger])
+      end
+    end
+  end
+  if target == "Opponent" or target == "both" then
+    for _, card in ipairs(self.opponent_slots) do
+      local ability = ABILITIES[card.name]
+      if ability and ability[trigger] then
+        table.insert(cards, card)
+        table.insert(abilities, ability[trigger])
+      end
+    end
+  end
+  return cards ~= {} and cards or nil, abilities ~= {} and abilities or nil
+end
+
 function Field:calculatePower()
   local function sumPower(cards)
     local total = 0
