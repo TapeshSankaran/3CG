@@ -16,7 +16,7 @@ scale = 2.2
 seed = os.time() -- [default: 5 for testing, os.time() for main use]
 
    -- Target Points --
-target_points = 100 -- [default: 25] 
+target_points = 25 -- [default: 25] 
 
    -- End Button Options --
 end_x = width*0.9
