@@ -16,7 +16,6 @@ Additionally, Greek Slam loosely implements the Event Queue pattern by waiting f
 **Postmortem**
 
 The code I implemented is somewhat well-made. I did reuse some code from before, but it was integrated into this project. While some of the code isn't fully commented, my only conscern with messiness is in Drag.lua, which holds all input-related actions as well as the state changes. This was done to allow for time in between stages of battles. Some things I would do differently would be to implement a different game loop that avoids such a large amount of state changes in the update function. 
-
 Overall, I am happy with how the game turned out and am looking forward to upgrading it in this future project. 
 ---
 
